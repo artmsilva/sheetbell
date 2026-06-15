@@ -15,7 +15,9 @@ with no Node-only dependencies.
 
 ## Features
 
-- **Slack OAuth gate** — only members of your Slack workspace can reach the form.
+- **Slack sign-in gate** — the form and its submit endpoint require signing in
+  with Slack. (By default this accepts any Slack account that completes sign-in;
+  restricting to your own workspace is a small code change — see the docs.)
 - **Appends to a Google Sheet** — each submission becomes a new row in a
   `Conversations` tab (timestamp, organizer, contact, date, message).
 - **Slack notifications** — a Block Kit message announces each submission;
@@ -134,12 +136,18 @@ environment variables (and secrets for the sensitive ones — `SLACK_CLIENT_SECR
 
 ## How it works
 
-- `src/middleware.js` gates the routes in `PROTECTED_ROUTES` (just `/` by default),
-  redirecting unauthenticated visitors to `/api/auth/login`.
+- `src/middleware.js` gates the form page `/` (redirect to Slack sign-in) and the
+  `/api/submit` endpoint (401 without a session). `/slackphoto` and `/docs` are
+  public.
 - `src/lib/auth.js` mints and verifies an HMAC-signed session token (Web Crypto),
-  stored in an HttpOnly, `SameSite=Lax`, `Secure` cookie.
-- `src/lib/config.js` builds all runtime configuration from environment variables.
+  stored in an HttpOnly, `SameSite=Lax`, `Secure` cookie. Note: the signing key is
+  `SLACK_CLIENT_SECRET`, so rotating that value logs everyone out.
+- `src/lib/config.js` builds all runtime configuration from environment variables
+  (via `astro:env/server`, so it works the same locally and in production).
 - `src/pages/api/submit.js` validates input, writes to Sheets, and posts to Slack.
+
+Full setup and walkthrough live in the docs site under **`/docs`** (start with
+`/docs/getting-started`).
 
 ## License
 

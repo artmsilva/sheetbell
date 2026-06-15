@@ -33,13 +33,31 @@ stick to Web APIs or it won't run in production.
 
 ### 1. The gate — `src/middleware.js`
 
-Middleware runs before every request. This one checks whether the path is in
-`PROTECTED_ROUTES` (just `/` by default). If it is, it reads the login cookie and
-verifies it. No valid cookie means a redirect to `/api/auth/login`. A valid cookie
-means the signed-in user is attached to `context.locals.user`, so pages can show
-who's logged in.
+Middleware runs before every request. It reads the login cookie and verifies it,
+then decides based on the path:
 
-Everything else — including these docs and `/slackphoto` — is ungated.
+- **Protected pages** (`PROTECTED_PAGES`, default `["/"]`): no valid cookie →
+  redirect to `/api/auth/login` (which starts the Slack sign-in). A valid cookie →
+  the signed-in user is attached to `context.locals.user` so pages can show who's
+  logged in.
+- **Protected APIs** (`PROTECTED_APIS`, default `["/api/submit"]`): no valid
+  cookie → a `401 Authentication required` JSON response (not a redirect, so a
+  `fetch()` from the page can handle it). This stops anyone from POSTing to your
+  sheet/Slack without signing in.
+
+### What requires signing in
+
+| Route | Signed-in? | Why |
+| --- | --- | --- |
+| `/` (the form) | **Required** | Redirects to Slack sign-in if you're not. |
+| `/api/submit` | **Required** | Returns 401 without a valid session. |
+| `/slackphoto` | Public | A standalone client-side tool; no data access. |
+| `/docs/*` | Public | Documentation; meant to be readable by anyone. |
+
+A note on scope: signing in accepts **any** Slack user who completes the OAuth
+flow. It does *not* restrict to your workspace. If you need that, add a check in
+`callback.js` comparing the returned team/workspace ID against your own before
+creating the session.
 
 ### 2. Signing in — the `src/pages/api/auth/` endpoints
 
@@ -63,7 +81,10 @@ When the form is submitted, the browser sends the data to
 
 1. **Sets security headers** and a same-origin **CORS** check.
 2. **Rate-limits** by IP (10 requests/minute) and rejects oversized requests
-   (>100 KB).
+   (>100 KB). The limiter is in-memory, so on a serverless platform like
+   Cloudflare it's best-effort per instance rather than a global guarantee — the
+   sign-in gate on this endpoint is the real protection. For hard limits, use
+   Cloudflare's rate-limiting rules or a KV/Durable Object counter.
 3. **Validates and sanitizes** the input against a strict schema — required
    fields, max lengths, a real date — and rejects any unexpected fields.
 4. **Appends a row** to the `Conversations` tab (`updateConvoLog`).

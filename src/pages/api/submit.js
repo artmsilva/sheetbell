@@ -1,3 +1,6 @@
+import { SLACK_OAUTH, GOOGLE_SERVICE_KEY } from "astro:env/server";
+import { getConfig } from "../../lib/config.js";
+
 // Google Sheets API helper
 const getAccessToken = async (env) => {
   const serviceKey = env.GOOGLE_SERVICE_KEY;
@@ -120,7 +123,7 @@ const sheetsAPI = {
  * Send a message to Slack
  */
 const sendSlackMessage = async (env, { blocks, threadTs }) => {
-  const config = getConfig(env);
+  const config = getConfig();
   try {
     const response = await fetch("https://slack.com/api/chat.postMessage", {
       method: "POST",
@@ -256,7 +259,7 @@ const formatTimestamp = () => {
  * Update the conversation log with new conversation details
  */
 const updateConvoLog = async (env, { body }) => {
-  const config = getConfig(env);
+  const config = getConfig();
   try {
     const { contact, organizer, date, message } = body;
     const spreadsheetId = config.spreadsheetId;
@@ -294,7 +297,7 @@ const updateConvoLog = async (env, { body }) => {
  * Find a contact in the eligible tab using both exact and fuzzy matching
  */
 const findContactInEligibleTab = async (env, contact) => {
-  const config = getConfig(env);
+  const config = getConfig();
   const spreadsheetId = config.spreadsheetId;
   // Get all data from the Eligible tab
   const sheet2Range = `${config.tabs.eligible}!A:Z`;
@@ -359,7 +362,7 @@ const findContactInEligibleTab = async (env, contact) => {
  * Update the Eligible tab with engagement information
  */
 const updateEligible = async (env, { body }) => {
-  const config = getConfig(env);
+  const config = getConfig();
   try {
     const { contact, organizer, date, message } = body;
     const spreadsheetId = config.spreadsheetId;
@@ -561,55 +564,48 @@ const validateRequestBody = (body) => {
  */
 export async function POST(context) {
   const request = context.request;
-  const response = new Response();
-  
-  // Get environment variables from context
-  // For Cloudflare Pages: context.locals.runtime.env
-  // For local dev with import.meta.env as fallback
-  const runtimeEnv = context.locals?.runtime?.env || import.meta.env;
-  
-  // Add PROD flag - check for CF_PAGES or if MODE is production
-  const env = {
-    ...runtimeEnv,
-    PROD: runtimeEnv.CF_PAGES === "1" || runtimeEnv.MODE === "production" || import.meta.env.PROD
+
+  // Secrets come from astro:env/server, which reads `.env` locally and the
+  // platform's bindings in production. Threaded through the helpers as `env`.
+  const env = { SLACK_OAUTH, GOOGLE_SERVICE_KEY };
+
+  // Security headers applied to every response.
+  const baseHeaders = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
   };
-  
-  try {
-    // Set security headers
-    const headers = new Headers({
-      "X-Content-Type-Options": "nosniff",
-      "X-Frame-Options": "DENY",
-      "X-XSS-Protection": "1; mode=block",
-      "Strict-Transport-Security":
-        "max-age=63072000; includeSubDomains; preload",
+
+  // CORS: allow same-origin requests only. `request.headers` is a Headers
+  // object, so values must be read with .get().
+  const origin = request.headers.get("origin");
+  const host = request.headers.get("host");
+  const isSameOrigin = Boolean(origin && host && origin.includes(host));
+  const corsHeaders = isSameOrigin
+    ? {
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Max-Age": "86400",
+      }
+    : {};
+
+  const jsonHeaders = {
+    "Content-Type": "application/json",
+    ...baseHeaders,
+    ...corsHeaders,
+  };
+
+  // Handle CORS preflight requests
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: { ...baseHeaders, ...corsHeaders },
     });
+  }
 
-    // CORS handling: allow same-origin requests only
-    const origin = request.headers.origin;
-    const host = request.headers.host;
-
-    // Check if it's same origin (host matches origin)
-    const isSameOrigin = origin && origin.includes(host);
-
-    if (isSameOrigin) {
-      headers.set("Access-Control-Allow-Origin", origin);
-      headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-      headers.set(
-        "Access-Control-Allow-Headers",
-        "Content-Type, Authorization"
-      );
-      headers.set("Access-Control-Max-Age", "86400");
-      console.log(`CORS allowed for same origin: ${origin}, host: ${host}`);
-    }
-
-    // Handle CORS headers for preflight requests
-    if (request.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        headers: response.headers,
-      });
-    }
-
+  try {
     // Rate limiting check
     const clientIp =
       request.headers.get("x-forwarded-for") ||
@@ -622,15 +618,15 @@ export async function POST(context) {
         }),
         {
           status: 429,
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: jsonHeaders,
         }
       );
     }
 
     // Check request size
-    const contentLength = parseInt(request.headers["content-length"] || "0");
+    const contentLength = parseInt(
+      request.headers.get("content-length") || "0"
+    );
     if (contentLength > 100 * 1024) {
       // 100KB limit
       return new Response(
@@ -639,9 +635,7 @@ export async function POST(context) {
         }),
         {
           status: 413,
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: jsonHeaders,
         }
       );
     }
@@ -654,9 +648,7 @@ export async function POST(context) {
     if (!validation.valid) {
       return new Response(JSON.stringify({ error: validation.error }), {
         status: 400,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: jsonHeaders,
       });
     }
 
@@ -793,15 +785,13 @@ export async function POST(context) {
       }),
       {
         status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: jsonHeaders,
       }
     );
   } catch (error) {
     console.error("Error processing request:", error);
     // Don't expose error details in production
-    const errorMessage = env.PROD
+    const errorMessage = import.meta.env.PROD
       ? "An error occurred while processing your request"
       : error.message;
 
@@ -812,9 +802,7 @@ export async function POST(context) {
       }),
       {
         status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: jsonHeaders,
       }
     );
   }

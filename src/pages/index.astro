@@ -3,8 +3,10 @@
 import "../index.css"
 import FormPage from "../components/FormPage"
 import Navbar from "../components/Navbar.jsx"
+import { getConfig } from "../lib/config.js"
 
 const user = Astro.locals.user;
+const { appName } = getConfig();
 
 ---
 
@@ -18,7 +20,7 @@ const user = Astro.locals.user;
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
 </head>
 <body class="text-white font-sans p-4 pt-0 pb-0 bg-gray-900">
-  <Navbar client:load user={user} />
+  <Navbar client:load user={user} appName={appName} />
   <FormPage client:load />
 </body>
 </html>

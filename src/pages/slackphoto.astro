@@ -1,6 +1,9 @@
 ---
 import SlackPhotoApp from '../components/SlackPhotoApp.jsx';
 import Navbar from '../components/Navbar.jsx';
+import { getConfig } from '../lib/config.js';
+
+const { appName } = getConfig();
 ---
 
 <html lang="en">
@@ -11,7 +14,7 @@ import Navbar from '../components/Navbar.jsx';
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   </head>
   <body class="text-white font-sans p-4 pt-0 pb-0 bg-gray-900">
-    <Navbar client:load />
+    <Navbar client:load appName={appName} />
     <div id="slackphoto-app">
       <SlackPhotoApp client:load />
     </div>

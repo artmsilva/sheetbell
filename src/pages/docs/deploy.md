@@ -51,6 +51,14 @@ wrangler secret put SLACK_OAUTH
 wrangler secret put GOOGLE_SERVICE_KEY
 ```
 
+## If Cloudflare mentions a `SESSION` binding
+
+The build prints a note about a Cloudflare KV `SESSION` binding. This app uses
+**stateless signed cookies** for login (not Astro's server-side sessions), so it
+doesn't need that binding to work. You can ignore the note. Only if Cloudflare
+actually errors with "Invalid binding `SESSION`" do you need to create a KV
+namespace and bind it as `SESSION` in your Cloudflare project settings.
+
 ## Point Slack at your real URL
 
 Once you know your deployed address (say `https://sheetbell.example.com`), go back

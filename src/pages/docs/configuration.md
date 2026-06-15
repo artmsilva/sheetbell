@@ -95,3 +95,7 @@ or a matching contact doesn't exist, this step is simply skipped — the
 `SLACK_CLIENT_SECRET`, `SLACK_OAUTH`, and `GOOGLE_SERVICE_KEY` are sensitive. Keep
 them out of git (your `.env` is already ignored), and in production store them as
 **secrets**, not plain variables, where your host offers the distinction.
+
+> Note: `SLACK_CLIENT_SECRET` does double duty — it's also the key used to sign
+> login-session cookies. If you ever rotate it in Slack, every active session
+> becomes invalid and all users are signed out and must sign in again.
