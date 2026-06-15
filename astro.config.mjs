@@ -16,7 +16,13 @@ export default defineConfig({
   env: {
     schema: {
       SLACK_OAUTH: envField.string({ context: "server", access: "secret" }),
-      SLACK_CLIENT_ID: envField.string({ context: "server", access: "public" }),
+      // Public vars are validated at build time; mark optional so the project
+      // (and these docs) build on a fresh clone before secrets are configured.
+      SLACK_CLIENT_ID: envField.string({
+        context: "server",
+        access: "public",
+        optional: true,
+      }),
       SLACK_CLIENT_SECRET: envField.string({ context: "server", access: "secret" }),
       GOOGLE_SERVICE_KEY: envField.string({
         context: "server",

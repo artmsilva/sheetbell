@@ -9,6 +9,12 @@ export default function Navbar({ user, appName = "Sheetbell" }) {
       >
         {appName}
       </a>
+      <a
+        href="/docs"
+        className="ml-4 text-sm text-gray-400 hover:text-blue-400 font-mono transition-colors"
+      >
+        Docs
+      </a>
       {user && (
         <>
           <span className="mx-2 text-gray-600">·</span>
