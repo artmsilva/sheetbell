@@ -51,7 +51,7 @@ jobs:
           cp src/index.css .pages-src/index.css
       - name: Build static docs
         run: npx astro build --config astro.pages.mjs
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist-pages
 
