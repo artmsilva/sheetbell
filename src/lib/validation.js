@@ -1,26 +1,14 @@
-// Request-body validation for the submit endpoint. Pure function, no I/O.
+// Validate a request body against a workflow trigger's `fields` schema.
+// Pure function, no I/O. Returns { valid: true, data } or { valid: false, error }.
 //
-// Returns either { valid: true, data } with sanitized values, or
-// { valid: false, error } with a human-readable message.
+// A field is { name, type: "text"|"textarea"|"date", required?, maxLength? }.
 
-const SCHEMA = {
-  contact: { type: "string", required: true, maxLength: 100 },
-  organizer: { type: "string", required: true, maxLength: 100 },
-  date: {
-    type: "date",
-    required: true,
-    validate: (v) => !Number.isNaN(new Date(v).getTime()),
-  },
-  message: { type: "string", required: true, maxLength: 5000 },
-};
-
-export function validateRequestBody(body) {
+export function validateFields(fields, body) {
   if (body === null || typeof body !== "object" || Array.isArray(body)) {
     return { valid: false, error: "Request body must be a JSON object" };
   }
 
-  // Reject unexpected fields (potential injection vectors).
-  const allowed = Object.keys(SCHEMA);
+  const allowed = fields.map((f) => f.name);
   const unexpected = Object.keys(body).filter((k) => !allowed.includes(k));
   if (unexpected.length > 0) {
     return { valid: false, error: `Unexpected fields: ${unexpected.join(", ")}` };
@@ -29,34 +17,30 @@ export function validateRequestBody(body) {
   const data = {};
   const errors = [];
 
-  for (const [field, rules] of Object.entries(SCHEMA)) {
-    const value = body[field];
+  for (const field of fields) {
+    const value = body[field.name];
 
-    if (rules.required && (value === undefined || value === null)) {
-      errors.push(`Missing required field: ${field}`);
+    if (field.required && (value === undefined || value === null || value === "")) {
+      errors.push(`Missing required field: ${field.name}`);
       continue;
     }
-    if (!rules.required && value === undefined) continue;
+    if (value === undefined) continue;
 
-    if (rules.type === "string") {
-      if (typeof value !== "string") {
-        errors.push(`Field '${field}' must be a string`);
-        continue;
-      }
-      if (rules.maxLength && value.length > rules.maxLength) {
-        errors.push(
-          `Field '${field}' exceeds maximum length of ${rules.maxLength}`
-        );
-        continue;
-      }
+    const isText = field.type === "text" || field.type === "textarea";
+    if (isText && typeof value !== "string") {
+      errors.push(`Field '${field.name}' must be a string`);
+      continue;
     }
-
-    if (rules.validate && !rules.validate(value)) {
-      errors.push(`Invalid value for field '${field}'`);
+    if (field.maxLength && typeof value === "string" && value.length > field.maxLength) {
+      errors.push(`Field '${field.name}' exceeds maximum length of ${field.maxLength}`);
+      continue;
+    }
+    if (field.type === "date" && Number.isNaN(new Date(value).getTime())) {
+      errors.push(`Invalid value for field '${field.name}'`);
       continue;
     }
 
-    data[field] = typeof value === "string" ? value.trim() : value;
+    data[field.name] = typeof value === "string" ? value.trim() : value;
   }
 
   if (errors.length > 0) return { valid: false, error: errors.join("; ") };

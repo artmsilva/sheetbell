@@ -1,7 +1,8 @@
 ---
-// Conversation form. Static markup rendered by Astro; the interactive behavior
-// (submit, status messages, confetti celebration) lives in the client script
-// below — no UI framework needed.
+// Form for a workflow's form trigger. Inputs are rendered from `fields`, so the
+// same component serves any form workflow. Interactivity is a single client
+// <script> that collects every named field — no UI framework.
+const { fields = [], title = "Submit" } = Astro.props;
 ---
 
 <main
@@ -22,14 +23,14 @@
     class="mb-6 md:mb-8 p-4 rounded-md text-white text-center max-w-xl mx-auto bg-linear-to-r from-purple-500 via-pink-500 to-red-500 animate-pulse"
   >
     <h2 class="text-xl font-bold animate-bounce">Submission Successful! 🎉</h2>
-    <p>Thank you for recording your conversation!</p>
+    <p>Thank you!</p>
   </div>
 
   <h1
     id="form-title"
     class="text-2xl md:text-3xl lg:text-4xl font-bold mb-6 md:mb-8 text-white text-center"
   >
-    Record a conversation
+    {title}
   </h1>
 
   <form
@@ -38,63 +39,34 @@
     class="space-y-6 md:space-y-8 max-w-2xl mx-auto"
   >
     <fieldset class="border border-gray-700 rounded-md p-4 md:p-6">
-      <legend class="text-lg font-medium px-2 text-gray-300">
-        Conversation details
-      </legend>
+      <legend class="text-lg font-medium px-2 text-gray-300">Details</legend>
 
-      <div class="grid md:grid-cols-2 gap-4 md:gap-6 mb-4">
-        <div class="mb-4 md:mb-0">
-          <label for="contact" class="block mb-1 font-medium text-gray-300">
-            Who was the conversation with?
-          </label>
-          <input
-            required
-            type="text"
-            id="contact"
-            name="contact"
-            class="w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white disabled:opacity-70"
-          />
-        </div>
-
-        <div class="mb-4 md:mb-0">
-          <label for="organizer" class="block mb-1 font-medium text-gray-300">
-            Who led the conversation?
-          </label>
-          <input
-            required
-            type="text"
-            id="organizer"
-            name="organizer"
-            class="w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white disabled:opacity-70"
-          />
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <label for="date" class="block mb-1 font-medium text-gray-300">
-          When did this conversation take place?
-        </label>
-        <input
-          required
-          type="date"
-          id="date"
-          name="date"
-          class="w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white disabled:opacity-70"
-        />
-      </div>
-
-      <div>
-        <label for="message" class="block mb-1 font-medium text-gray-300">
-          How did the conversation go?
-        </label>
-        <textarea
-          required
-          id="message"
-          name="message"
-          rows="10"
-          class="w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white disabled:opacity-70"
-        ></textarea>
-      </div>
+      {
+        fields.map((field) => (
+          <div class="mb-4">
+            <label for={field.name} class="block mb-1 font-medium text-gray-300">
+              {field.label}
+            </label>
+            {field.type === "textarea" ? (
+              <textarea
+                id={field.name}
+                name={field.name}
+                rows={field.rows ?? 5}
+                required={field.required}
+                class="w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white disabled:opacity-70"
+              />
+            ) : (
+              <input
+                id={field.name}
+                name={field.name}
+                type={field.type === "date" ? "date" : "text"}
+                required={field.required}
+                class="w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white disabled:opacity-70"
+              />
+            )}
+          </div>
+        ))
+      }
     </fieldset>
 
     <button
@@ -108,50 +80,38 @@
 </main>
 
 <script>
-  // canvas-confetti is loaded on demand (Import on Interaction) — it only fires
-  // after a successful submit, so it stays out of the initial bundle.
   const form = document.getElementById("convo-form") as HTMLFormElement;
   const statusBox = document.getElementById("form-status") as HTMLElement;
   const celebration = document.getElementById("form-celebration") as HTMLElement;
   const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
-  const dateInput = document.getElementById("date") as HTMLInputElement;
-  const fieldIds = ["contact", "organizer", "date", "message"] as const;
+
+  // Every named control in the form — works for whatever fields were rendered.
+  const controls = () =>
+    Array.from(
+      form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("[name]")
+    );
 
   const today = new Date().toISOString().split("T")[0];
-  if (!dateInput.value) dateInput.value = today;
-
-  // Convenience prefill during local development only.
-  if (import.meta.env.DEV) {
-    const set = (id: string, v: string) => {
-      const el = document.getElementById(id) as HTMLInputElement | null;
-      if (el && !el.value) el.value = v;
-    };
-    set("contact", "John Doe");
-    set("organizer", "Jane Doe");
-    set("message", `sample - ${new Date().toISOString()}`);
+  for (const el of controls()) {
+    if (el.type === "date" && !el.value) el.value = today;
+    // Convenience prefill in local development only.
+    if (import.meta.env.DEV && el.type !== "date" && !el.value) {
+      el.value = el.tagName === "TEXTAREA" ? `sample - ${new Date().toISOString()}` : "Sample";
+    }
   }
 
-  const STATUS_BG = {
-    info: "bg-blue-600",
-    error: "bg-red-600",
-    success: "bg-green-600",
-  } as const;
-
+  const STATUS_BG = { info: "bg-blue-600", error: "bg-red-600", success: "bg-green-600" } as const;
   function showStatus(kind: keyof typeof STATUS_BG, msg: string) {
     statusBox.textContent = msg;
     statusBox.classList.remove("bg-blue-600", "bg-red-600", "bg-green-600");
     statusBox.classList.add(STATUS_BG[kind]);
     statusBox.hidden = false;
   }
-  function hideStatus() {
-    statusBox.hidden = true;
-  }
+  const hideStatus = () => (statusBox.hidden = true);
   function setSubmitting(on: boolean) {
     submitBtn.disabled = on;
     submitBtn.textContent = on ? "Submitting..." : "Submit";
-    for (const id of fieldIds) {
-      (document.getElementById(id) as HTMLInputElement).disabled = on;
-    }
+    for (const el of controls()) el.disabled = on;
   }
 
   async function celebrate() {
@@ -182,9 +142,7 @@
     hideStatus();
     showStatus("info", "Submitting your form...");
 
-    const body = Object.fromEntries(
-      fieldIds.map((id) => [id, (document.getElementById(id) as HTMLInputElement).value])
-    );
+    const body = Object.fromEntries(controls().map((el) => [el.name, el.value]));
 
     try {
       const res = await fetch("/api/submit", {
@@ -195,7 +153,7 @@
       if (!res.ok) throw new Error("Server responded with an error");
       hideStatus();
       form.reset();
-      dateInput.value = today;
+      for (const el of controls()) if (el.type === "date") el.value = today;
       celebrate();
     } catch (err) {
       console.error(err);

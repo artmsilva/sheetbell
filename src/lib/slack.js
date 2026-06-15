@@ -1,15 +1,10 @@
 // Slack chat.postMessage client. Checks both the HTTP status and the Slack
-// `ok` flag, and provides escaping for user-controlled text.
+// `ok` flag. (Escaping lives in format.js so it's usable without this module's
+// astro:env import.)
 
 import { SLACK_OAUTH } from "astro:env/server";
 
-/**
- * Escape text before placing it in a Slack `mrkdwn` block, so user input can't
- * inject mentions/links like `<!channel>`, `<@U…>`, or `<http…|click>`.
- * See https://api.slack.com/reference/surfaces/formatting#escaping
- */
-export const escapeMrkdwn = (text) =>
-  String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+export { escapeMrkdwn } from "./format.js";
 
 /**
  * Post a message to a channel. Returns the message `ts` (usable as a thread

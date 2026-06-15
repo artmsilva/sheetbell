@@ -4,9 +4,11 @@ import "../index.css"
 import FormPage from "../components/FormPage.astro"
 import Navbar from "../components/Navbar.astro"
 import { getConfig } from "../lib/config.js"
+import { primaryFormWorkflow } from "../workflows/index.js"
 
 const user = Astro.locals.user;
 const { appName } = getConfig();
+const { title, fields } = primaryFormWorkflow.trigger;
 
 ---
 
@@ -15,7 +17,7 @@ const { appName } = getConfig();
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Record a conversation</title>
+  <title>{title}</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -27,7 +29,7 @@ const { appName } = getConfig();
 </head>
 <body class="text-white font-sans p-4 pt-0 pb-0 bg-gray-900">
   <Navbar user={user} appName={appName} />
-  <FormPage />
+  <FormPage title={title} fields={fields} />
 </body>
 </html>
 
