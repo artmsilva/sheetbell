@@ -1,0 +1,12 @@
+@import url("https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;700&display=swap");
+
+body {
+  font-family: "Fira Mono", monospace; /* Set body font to monospaced */
+}
+
+/* Define font-family classes */
+.font-serif,
+.font-sans,
+.font-mono {
+  font-family: "Fira Mono", monospace;
+}

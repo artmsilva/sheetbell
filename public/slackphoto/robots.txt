@@ -1,0 +1,3 @@
+# Aggressively block all robots from crawling the site
+User-agent: *
+Disallow: /

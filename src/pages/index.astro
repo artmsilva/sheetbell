@@ -1,0 +1,25 @@
+---
+
+import "../index.css"
+import FormPage from "../components/FormPage"
+import Navbar from "../components/Navbar.jsx"
+
+const user = Astro.locals.user;
+
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Record a conversation</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+</head>
+<body class="text-white font-sans p-4 pt-0 pb-0 bg-gray-900">
+  <Navbar client:load user={user} />
+  <FormPage client:load />
+</body>
+</html>
+

@@ -1,0 +1,19 @@
+---
+import SlackPhotoApp from '../components/SlackPhotoApp.jsx';
+import Navbar from '../components/Navbar.jsx';
+---
+
+<html lang="en">
+  <head>
+    <title>add a frame to slack profile photo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  </head>
+  <body class="text-white font-sans p-4 pt-0 pb-0 bg-gray-900">
+    <Navbar client:load />
+    <div id="slackphoto-app">
+      <SlackPhotoApp client:load />
+    </div>
+  </body>
+</html>
