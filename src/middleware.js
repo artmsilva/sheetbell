@@ -3,7 +3,7 @@ import { verifySession, parseCookie, COOKIE_NAME } from "./lib/auth.js";
 
 // Pages that require Slack authentication. An unauthenticated visitor is sent
 // to sign in with Slack.
-const PROTECTED_PAGES = ["/"];
+const PROTECTED_PAGES = ["/", "/flows"];
 
 // API routes that require authentication. These return 401 JSON instead of
 // redirecting, so a fetch() from the page can handle the failure cleanly.

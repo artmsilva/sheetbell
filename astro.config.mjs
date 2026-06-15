@@ -19,6 +19,8 @@ export default defineConfig({
       SLACK_OAUTH: envField.string({ context: "server", access: "secret" }),
       SLACK_CLIENT_SECRET: envField.string({ context: "server", access: "secret" }),
       GOOGLE_SERVICE_KEY: envField.string({ context: "server", access: "secret" }),
+      // Optional: enables webhook triggers (/api/hooks/<slug>) when set.
+      WEBHOOK_SECRET: envField.string({ context: "server", access: "secret", optional: true }),
 
       // ── Public, server-only config (validated at build) ──
       // Marked optional so a fresh clone builds before anything is configured.

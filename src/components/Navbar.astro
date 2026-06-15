@@ -17,6 +17,16 @@ const { user, appName = "Sheetbell" } = Astro.props;
   </a>
   {
     user && (
+      <a
+        href="/flows"
+        class="ml-4 text-sm text-gray-400 hover:text-blue-400 font-mono transition-colors"
+      >
+        Flows
+      </a>
+    )
+  }
+  {
+    user && (
       <Fragment>
         <span class="ml-auto text-sm text-gray-400 font-mono">{user.name}</span>
         <span class="mx-2 text-gray-600">·</span>
