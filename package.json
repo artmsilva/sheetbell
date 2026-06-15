@@ -11,16 +11,16 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^12.6.12",
-    "@astrojs/react": "^4.4.0",
+    "@astrojs/cloudflare": "^13.7.0",
+    "@astrojs/react": "^5.0.7",
     "@astrojs/tailwind": "^6.0.2",
-    "astro": "^5.14.1",
+    "astro": "^6.4.7",
     "canvas-confetti": "^1.9.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
-    "@astrojs/node": "^9.4.4",
+    "@astrojs/node": "^10.1.4",
     "@types/canvas-confetti": "^1.9.0",
     "@types/react": "^19.1.15",
     "@types/react-dom": "^19.1.9",
