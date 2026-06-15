@@ -59,28 +59,6 @@ doesn't need that binding to work. You can ignore the note. Only if Cloudflare
 actually errors with "Invalid binding `SESSION`" do you need to create a KV
 namespace and bind it as `SESSION` in your Cloudflare project settings.
 
-## Optional: enable idempotency (KV)
-
-To prevent duplicate rows on retries/double-submits, bind a KV namespace named
-`IDEMPOTENCY`:
-
-```bash
-wrangler kv namespace create IDEMPOTENCY
-```
-
-Then add the binding to your Cloudflare project — in the dashboard under
-**Settings → Bindings → KV namespace** (variable name `IDEMPOTENCY`), or in your
-`wrangler` config:
-
-```jsonc
-{
-  "kv_namespaces": [{ "binding": "IDEMPOTENCY", "id": "<the-id-from-above>" }]
-}
-```
-
-That's it — the app detects the binding at runtime and starts deduping. Skip this
-and submissions still work; they just won't dedupe retries.
-
 ## Point Slack at your real URL
 
 Once you know your deployed address (say `https://sheetbell.example.com`), go back

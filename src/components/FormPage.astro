@@ -176,11 +176,6 @@
     }, 250);
   }
 
-  // Idempotency key for this submission attempt. Kept stable across retries of
-  // the same attempt (so the server dedupes them), and rotated after a success
-  // so the next, different submission gets a fresh key.
-  let idempotencyKey = crypto.randomUUID();
-
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -194,14 +189,10 @@
     try {
       const res = await fetch("/api/submit", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Idempotency-Key": idempotencyKey,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error("Server responded with an error");
-      idempotencyKey = crypto.randomUUID(); // next submission is a new operation
       hideStatus();
       form.reset();
       dateInput.value = today;

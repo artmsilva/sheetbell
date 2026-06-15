@@ -14,9 +14,6 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Cloudflare.
 - Optional contact reconciliation against an `Eligible` sheet tab (exact +
   fuzzy matching), all sheet/channel/column values configurable via env.
-- Optional idempotency: an `Idempotency-Key` header + a Cloudflare KV namespace
-  bound as `IDEMPOTENCY` replays a repeated submission instead of writing a
-  duplicate row (graceful no-op when unbound).
 - `submit.js` is a thin mediator over `src/lib/` clients (Google Sheets, Slack,
   matching, validation, rate-limit); atomic sheet append, accurate failure
   status, and lazy-loaded confetti.

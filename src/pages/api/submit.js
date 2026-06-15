@@ -6,7 +6,6 @@
 // response; the notification/reconciliation steps are best-effort so a Slack
 // hiccup never reports failure for a row that was actually written.
 
-import { env } from "cloudflare:workers";
 import { getConfig } from "../../lib/config.js";
 import { createSheetsClient } from "../../lib/google-sheets.js";
 import { postMessage, escapeMrkdwn } from "../../lib/slack.js";
@@ -146,7 +145,7 @@ export async function POST(context) {
     ? {
         "Access-Control-Allow-Origin": origin,
         "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, Idempotency-Key",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
         "Access-Control-Max-Age": "86400",
       }
     : {};
@@ -183,29 +182,6 @@ export async function POST(context) {
   if (!validation.valid) return json(400, { error: validation.error });
   const data = validation.data;
 
-  // Idempotency: when the client sends an Idempotency-Key AND a KV namespace is
-  // bound as `IDEMPOTENCY`, replay the stored result for a repeated key instead
-  // of writing again (prevents duplicate rows on retries/resubmits). Both are
-  // optional — absent either (e.g. local dev), this is a no-op.
-  const idempotencyKey = request.headers.get("idempotency-key");
-  // KV namespace bound as `IDEMPOTENCY` (Astro v6 reads bindings from
-  // `cloudflare:workers`, not `Astro.locals.runtime.env`). Undefined when unbound.
-  const idempotencyStore = env.IDEMPOTENCY;
-  const idempotencyEnabled = Boolean(idempotencyKey && idempotencyStore);
-  if (idempotencyEnabled) {
-    try {
-      const replay = await idempotencyStore.get(idempotencyKey);
-      if (replay) {
-        return new Response(replay, {
-          status: 200,
-          headers: { ...headers, "Idempotency-Replayed": "true" },
-        });
-      }
-    } catch (error) {
-      console.error("Idempotency lookup failed:", error.message);
-    }
-  }
-
   const config = getConfig();
   const sheets = createSheetsClient(config.spreadsheetId);
 
@@ -241,22 +217,7 @@ export async function POST(context) {
     eligible = "error";
   }
 
-  const result = { status: "ok", logged: true, eligible };
-
-  // Record the successful submission so a retry with the same key replays this
-  // result instead of writing again. Stored only on success, so a failed write
-  // can still be retried. TTL bounds the dedup window.
-  if (idempotencyEnabled) {
-    try {
-      await idempotencyStore.put(idempotencyKey, JSON.stringify(result), {
-        expirationTtl: 60 * 60 * 24, // 24 hours
-      });
-    } catch (error) {
-      console.error("Idempotency store failed:", error.message);
-    }
-  }
-
-  return json(200, result);
+  return json(200, { status: "ok", logged: true, eligible });
 }
 
 export const prerender = false;

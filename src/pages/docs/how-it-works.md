@@ -87,15 +87,10 @@ plumbing, then coordinates domain steps using the clients in `src/lib/`. In orde
    For hard limits, use Cloudflare's rate-limiting rules or a Durable Object.
 3. **Validates and sanitizes** input (`src/lib/validation.js`) — required fields,
    max lengths, a real date — rejecting unexpected fields.
-4. **Idempotency** (optional): if the client sent an `Idempotency-Key` and a KV
-   namespace is bound as `IDEMPOTENCY`, a repeat key **replays the stored result**
-   instead of writing again — so a retry/double-submit doesn't create a duplicate
-   row. Stored only on success (a failed write can still be retried). Skipped when
-   either the key or the binding is absent.
-5. **Appends a row** to the `Conversations` tab via the Sheets client's atomic
+4. **Appends a row** to the `Conversations` tab via the Sheets client's atomic
    `appendRow` (no read-then-write race). **This is the step that decides the
    response**: if it fails you get a `502`, not a false "success".
-6. **Notifies Slack and reconciles** the `Eligible` tab — both **best-effort**: a
+5. **Notifies Slack and reconciles** the `Eligible` tab — both **best-effort**: a
    Slack hiccup never fails a row that was already saved. The response reports the
    outcome (`{ logged, eligible }`).
 

@@ -90,23 +90,6 @@ or a matching contact doesn't exist, this step is simply skipped — the
 
 > Don't need a contact roster? Leave the `Eligible` tab out. Nothing breaks.
 
-## Idempotency (optional)
-
-To stop a retry or double-submit from creating a duplicate row, the form sends an
-`Idempotency-Key` header and the server can record successful submissions in a
-**Cloudflare KV namespace bound as `IDEMPOTENCY`**. A repeat key replays the stored
-result instead of writing again (stored only on success, with a 24-hour TTL).
-
-This is entirely optional and **off until you bind the namespace** — without it,
-submissions work exactly as before. The client always sends the key; the server
-simply ignores it when no `IDEMPOTENCY` binding is present (e.g. local dev). See
-[Deploy](/docs/deploy) for how to create and bind the namespace.
-
-> KV is eventually consistent, so two *simultaneous* requests with the same key
-> could still both write (the form already disables the button during submit,
-> which covers the common double-click). For a strict guarantee, back it with a
-> Durable Object instead.
-
 ## A note on secrets
 
 `SLACK_CLIENT_SECRET`, `SLACK_OAUTH`, and `GOOGLE_SERVICE_KEY` are sensitive. Keep
