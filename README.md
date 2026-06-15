@@ -40,6 +40,23 @@ with no Node-only dependencies.
 | Auth           | Slack OAuth → HMAC-signed JWT in an HttpOnly cookie |
 | Data           | Google Sheets API v4 (service account, RS256 JWT)  |
 
+## Documentation
+
+The full docs (overview, getting started, configuration, how it works, deploy) live
+in `src/pages/docs/`. They're served two ways:
+
+- **In the app** at `/docs` when it's running.
+- **As a static site on GitHub Pages**: <https://artmsilva.github.io/sheetbell/>
+  (published by `.github/workflows/pages.yml`).
+
+To build the docs site locally:
+
+```bash
+mkdir -p .pages-src/pages && cp -R src/pages/docs .pages-src/pages/docs \
+  && cp -R src/layouts .pages-src/layouts && cp src/index.css .pages-src/index.css
+PAGES_BASE=/sheetbell npx astro build --config astro.pages.mjs   # output in dist-pages/
+```
+
 ## Built to be AI-friendly
 
 This repo ships with tooling so an AI assistant can help you set up, run, and extend

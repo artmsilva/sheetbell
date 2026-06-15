@@ -1,5 +1,8 @@
 # build output
 dist/
+dist-pages/
+# assembled docs source for the GitHub Pages build
+.pages-src/
 # generated types
 .astro/
 
