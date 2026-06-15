@@ -63,7 +63,8 @@ src/
     slack.js                 chat.postMessage client
     matching.js / validation.js / format.js / rate-limit.js   (pure utils)
   workflows/
-    conversation.js          the built-in form workflow, as data
+    conversation.js          built-in form workflow (the form at /)
+    alert.js                 built-in webhook-only workflow (Slack alert)
     index.js                 registry (slug → workflow)
   pages/
     index.astro              the form page (gated) — renders the workflow's fields

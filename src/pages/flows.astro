@@ -51,7 +51,12 @@ const condition = (step) =>
               </span>
             </div>
             <p class="text-xs text-gray-500 mb-4">
-              form: <code>/</code> · webhook: <code>/api/hooks/{wf.slug}</code>
+              {wf.trigger?.type === "form" && (
+                <Fragment>
+                  form: <code>/</code> ·{" "}
+                </Fragment>
+              )}
+              webhook: <code>/api/hooks/{wf.slug}</code>
             </p>
 
             <ol class="relative border-l border-gray-700 ml-2 space-y-4">

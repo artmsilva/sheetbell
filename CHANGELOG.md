@@ -22,6 +22,7 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `unless` step control, and node types (`sheets.append`, `sheets.matchUpdate`,
   `slack.message`, `http.request`). Schema-driven form, **webhook triggers**
   (`/api/hooks/<slug>`, gated by `WEBHOOK_SECRET`), and a read-only `/flows` view.
+  Two built-in workflows: `conversation` (form) and `alert` (webhook-only).
 - Documentation site under `/docs` (overview, getting started, configuration,
   how it works, deploy), also published to GitHub Pages.
 - AI agent tooling: `AGENTS.md`, `CLAUDE.md`, `.claude/` commands, agent, and

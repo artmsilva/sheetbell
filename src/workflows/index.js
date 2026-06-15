@@ -3,9 +3,11 @@
 // form triggers, drives the form at /.
 
 import conversation from "./conversation.js";
+import alert from "./alert.js";
 
 export const workflows = {
   [conversation.slug]: conversation,
+  [alert.slug]: alert,
 };
 
 export const allWorkflows = Object.values(workflows);

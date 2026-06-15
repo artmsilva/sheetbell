@@ -14,6 +14,14 @@ but the same trigger → steps → integrations shape.
 
 You can see every workflow rendered as a pipeline at **`/flows`** (sign-in required).
 
+Two ship built in:
+
+- **`conversation`** — a *form* trigger (the form at `/`): logs to the
+  `Conversations` tab, posts to Slack, reconciles the `Eligible` tab.
+- **`alert`** — a *webhook-only* trigger: `POST /api/hooks/alert` with
+  `{ "title", "message" }` posts a Slack alert. A minimal example of a non-form
+  workflow.
+
 ## Anatomy
 
 ```js

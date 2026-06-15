@@ -51,6 +51,9 @@ wrangler secret put SLACK_OAUTH
 wrangler secret put GOOGLE_SERVICE_KEY
 ```
 
+To enable [webhook workflows](/docs/workflows) (`/api/hooks/<slug>`), also set a
+`WEBHOOK_SECRET` (secret). Leave it unset to keep webhooks disabled.
+
 ## If Cloudflare mentions a `SESSION` binding
 
 The build prints a note about a Cloudflare KV `SESSION` binding. This app uses
