@@ -77,35 +77,46 @@ can't read it), `Secure` (HTTPS only), and expires after 7 days.
 ## Following a submission
 
 When the form is submitted, the browser sends the data to
-**`src/pages/api/submit.js`**. That one file is the heart of the app. In order, it:
+**`src/pages/api/submit.js`**, which is a thin **mediator**: it does the HTTP
+plumbing, then coordinates domain steps using the clients in `src/lib/`. In order:
 
-1. **Sets security headers** and a same-origin **CORS** check.
-2. **Rate-limits** by IP (10 requests/minute) and rejects oversized requests
-   (>100 KB). The limiter is in-memory, so on a serverless platform like
-   Cloudflare it's best-effort per instance rather than a global guarantee — the
-   sign-in gate on this endpoint is the real protection. For hard limits, use
-   Cloudflare's rate-limiting rules or a KV/Durable Object counter.
-3. **Validates and sanitizes** the input against a strict schema — required
-   fields, max lengths, a real date — and rejects any unexpected fields.
-4. **Appends a row** to the `Conversations` tab (`updateConvoLog`).
-5. **Posts a Slack message** announcing the submission, and remembers its
-   timestamp so follow-ups can be threaded underneath it.
-6. **Reconciles the contact** in the `Eligible` tab (`updateEligible`) and threads
-   a "updated" or "not found" message under the first.
+1. **Sets security headers** and a strict same-origin **CORS** check.
+2. **Rate-limits** by IP (`src/lib/rate-limit.js`, 10/min) and rejects oversized
+   requests (>100 KB). The limiter is in-memory, so on Cloudflare it's best-effort
+   per instance, not a global guarantee — the sign-in gate is the real protection.
+   For hard limits, use Cloudflare's rate-limiting rules or a Durable Object.
+3. **Validates and sanitizes** input (`src/lib/validation.js`) — required fields,
+   max lengths, a real date — rejecting unexpected fields.
+4. **Idempotency** (optional): if the client sent an `Idempotency-Key` and a KV
+   namespace is bound as `IDEMPOTENCY`, a repeat key **replays the stored result**
+   instead of writing again — so a retry/double-submit doesn't create a duplicate
+   row. Stored only on success (a failed write can still be retried). Skipped when
+   either the key or the binding is absent.
+5. **Appends a row** to the `Conversations` tab via the Sheets client's atomic
+   `appendRow` (no read-then-write race). **This is the step that decides the
+   response**: if it fails you get a `502`, not a false "success".
+6. **Notifies Slack and reconciles** the `Eligible` tab — both **best-effort**: a
+   Slack hiccup never fails a row that was already saved. The response reports the
+   outcome (`{ logged, eligible }`).
 
-### Talking to Google Sheets
+### The lib clients
 
-Google requires a signed request to hand out an access token. `submit.js` builds a
-short-lived **RS256 JWT** from your service-account key, exchanges it at Google's
-token endpoint, and then calls the Sheets REST API (`sheetsAPI.get` / `update`).
-This is the part that needs Web Crypto.
+- **`src/lib/google-sheets.js`** — `createSheetsClient(spreadsheetId)`. Signs an
+  **RS256 JWT** from the service-account key (Web Crypto), fetches the access token
+  **once per request**, and exposes `getValues` / `appendRow` / `update`. Every
+  call checks `response.ok` and throws a descriptive error.
+- **`src/lib/slack.js`** — `postMessage` (checks HTTP + Slack `ok`) and
+  `escapeMrkdwn`, which neutralizes mention/link injection (`<!channel>`, `<@…>`)
+  in user-supplied text.
+- **`src/lib/matching.js`** — pure name-matching (normalize, exact/fuzzy,
+  `columnLetter`). **`src/lib/validation.js`** — the pure schema validator. Both
+  are unit-testable in isolation.
 
 ### Where settings come from
 
-Notice that `submit.js` never hard-codes a sheet ID or channel. It calls
-`getConfig(env)` from **`src/lib/config.js`**, which turns environment variables
-into a settings object. If you want to change *what* a setting means, that's the
-file to edit — see **[Configuration](/docs/configuration)** for the list.
+`submit.js` never hard-codes a sheet ID or channel. It calls `getConfig()` from
+**`src/lib/config.js`**, which reads environment variables (via `astro:env/server`).
+See **[Configuration](/docs/configuration)** for the list.
 
 ## The form itself — `src/components/FormPage.astro`
 
