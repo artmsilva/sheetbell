@@ -17,6 +17,11 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `submit.js` is a thin mediator over `src/lib/` clients (Google Sheets, Slack,
   matching, validation, rate-limit); atomic sheet append, accurate failure
   status, and lazy-loaded confetti.
+- **Declarative workflow engine** (`src/lib/workflow.js`): the form/Slack/Sheets
+  pipeline is now data (`src/workflows/`) with `{{ }}` templating, `core`/`when`/
+  `unless` step control, and node types (`sheets.append`, `sheets.matchUpdate`,
+  `slack.message`, `http.request`). Schema-driven form, **webhook triggers**
+  (`/api/hooks/<slug>`, gated by `WEBHOOK_SECRET`), and a read-only `/flows` view.
 - Documentation site under `/docs` (overview, getting started, configuration,
   how it works, deploy), also published to GitHub Pages.
 - AI agent tooling: `AGENTS.md`, `CLAUDE.md`, `.claude/` commands, agent, and

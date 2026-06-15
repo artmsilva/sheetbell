@@ -34,6 +34,7 @@ default behavior:
 
 | Variable | Default | What it does |
 | --- | --- | --- |
+| `WEBHOOK_SECRET` | _unset_ | Secret token that enables webhook triggers (`/api/hooks/<slug>`). Webhooks are off until this is set. See [Workflows](/docs/workflows). |
 | `SPREADSHEET_ID_TEST` | falls back to `SPREADSHEET_ID` | A separate scratch spreadsheet used when not in production. |
 | `SLACK_CHANNEL_ID_TEST` | falls back to `SLACK_CHANNEL_ID` | A separate channel used when not in production. |
 | `APP_NAME` | `Sheetbell` | The name shown in the navigation bar. |

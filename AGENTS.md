@@ -53,36 +53,49 @@ Values flow via `astro:env/server`, so the SAME code path works in local dev
 
 ```
 src/
-  middleware.js              gate the form page (/) and /api/submit
+  middleware.js              gate / and /flows (pages) and /api/submit (API)
   lib/
     auth.js                  HMAC-signed session cookies (Web Crypto)
     config.js                getConfig() — all settings from env
+    workflow.js              the workflow engine: runner + node registry
+    expressions.js           {{ }} template resolver (pure, tested)
+    google-sheets.js         Sheets client (token singleton, ok-checks, append)
+    slack.js                 chat.postMessage client
+    matching.js / validation.js / format.js / rate-limit.js   (pure utils)
+  workflows/
+    conversation.js          the built-in form workflow, as data
+    index.js                 registry (slug → workflow)
   pages/
-    index.astro              the form page (gated)
+    index.astro              the form page (gated) — renders the workflow's fields
+    flows.astro              read-only workflow visualization (gated)
     docs/                    the documentation site (public)
     api/
-      submit.js              validate → Google Sheets → Slack  (the core)
+      submit.js              runs the primary form workflow
+      hooks/[slug].js        webhook trigger: runs a workflow (token-auth)
       auth/                  login / callback / logout (Slack OAuth)
   components/
-    FormPage.astro           the form (markup + a client <script>)
+    FormPage.astro           schema-driven form (markup + a client <script>)
     Navbar.astro             top nav (takes appName + user)
   layouts/DocsLayout.astro   docs shell
 ```
 
 ### Auth model (what's gated)
 
-`src/middleware.js` gates `/` (redirect to Slack sign-in) and `/api/submit`
-(401 JSON without a session). `/docs/*` is public. Sessions are
-stateless HMAC-signed JWTs in an HttpOnly cookie (`src/lib/auth.js`), signed with
-`SLACK_CLIENT_SECRET`. Sign-in currently accepts any Slack account — there's no
-workspace restriction unless you add a team-ID check in `callback.js`.
+`src/middleware.js` gates the `/` and `/flows` pages (redirect to Slack sign-in)
+and `/api/submit` (401 without a session). `/docs/*` is public. **`/api/hooks/*`
+is not session-gated** — webhooks authenticate with the `WEBHOOK_SECRET` token
+instead. Sessions are stateless HMAC-signed JWTs in an HttpOnly cookie
+(`src/lib/auth.js`), signed with `SLACK_CLIENT_SECRET`. Sign-in accepts any Slack
+account unless you add a team-ID check in `callback.js`.
 
-### The submit pipeline (`src/pages/api/submit.js`)
+### The workflow engine
 
-security headers → same-origin CORS → in-memory rate limit → 100KB cap → strict
-input validation → append row to the `Conversations` tab → post Slack message →
-reconcile the contact in the optional `Eligible` tab (exact/substring/token, then
-Levenshtein fuzzy match) → thread a follow-up Slack message.
+The app is a tiny declarative workflow runner (see `/docs/workflows`). `submit.js`
+and `hooks/[slug].js` are thin front doors that validate input and call
+`runWorkflow()` from `src/lib/workflow.js`, which executes the steps declared in
+`src/workflows/*`. A step marked `core` failing → HTTP 502; other steps are
+best-effort. Add an integration by adding a node type to the `NODES` map in
+`workflow.js`; add a flow by registering a definition in `src/workflows/`.
 
 ## Conventions
 

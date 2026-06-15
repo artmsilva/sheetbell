@@ -26,6 +26,10 @@ client `<script>` for the form's interactivity.
 - **Optional contact reconciliation** — looks up the submitted contact in an
   `Eligible` tab using exact, substring, token, and fuzzy (Levenshtein) matching,
   then stamps "last engagement" and "notes" columns.
+- **Tiny workflow engine** — the form/Slack/Sheets pipeline is a declarative
+  workflow (trigger → steps with `{{ }}` templating). Run it from the form or a
+  **webhook** (`/api/hooks/<slug>`), view it at `/flows`, and add steps/integrations
+  by editing data. A baby [n8n](https://n8n.io). See [docs](./src/pages/docs/workflows.md).
 - **Built-in hardening** — same-origin CORS, per-IP rate limiting, request-size cap,
   strict input validation, and security headers.
 
