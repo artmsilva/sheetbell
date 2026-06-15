@@ -40,6 +40,23 @@ with no Node-only dependencies.
 | Auth           | Slack OAuth → HMAC-signed JWT in an HttpOnly cookie |
 | Data           | Google Sheets API v4 (service account, RS256 JWT)  |
 
+## Built to be AI-friendly
+
+This repo ships with tooling so an AI assistant can help you set up, run, and extend
+it:
+
+- **[AGENTS.md](./AGENTS.md)** — orientation for any AI agent (architecture, runtime
+  constraints, config model, conventions). **[CLAUDE.md](./CLAUDE.md)** points
+  Claude Code at it.
+- **Slash commands** (`.claude/commands/`): `/setup`, `/verify-setup`,
+  `/deploy-check`, `/add-field`.
+- **Agent** (`.claude/agents/`): `setup-doctor` — diagnoses why things aren't working.
+- **Skills** (`.claude/skills/`): step-by-step Slack-app and Google-Sheets setup.
+- **Prompts** (`prompts/`): copy-paste prompts for common tasks.
+
+New here? In Claude Code, just run `/setup`. Otherwise, paste the "Set it up with me"
+prompt from `prompts/README.md`.
+
 ## Prerequisites
 
 - Node.js 22 (see `.nvmrc`)
