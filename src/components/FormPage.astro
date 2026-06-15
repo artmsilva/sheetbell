@@ -108,8 +108,8 @@
 </main>
 
 <script>
-  import confetti from "canvas-confetti";
-
+  // canvas-confetti is loaded on demand (Import on Interaction) — it only fires
+  // after a successful submit, so it stays out of the initial bundle.
   const form = document.getElementById("convo-form") as HTMLFormElement;
   const statusBox = document.getElementById("form-status") as HTMLElement;
   const celebration = document.getElementById("form-celebration") as HTMLElement;
@@ -154,7 +154,8 @@
     }
   }
 
-  function celebrate() {
+  async function celebrate() {
+    const { default: confetti } = await import("canvas-confetti");
     celebration.hidden = false;
     const duration = 3000;
     const animationEnd = Date.now() + duration;

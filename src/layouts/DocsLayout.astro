@@ -30,6 +30,12 @@ const current = Astro.url.pathname.replace(/\/$/, "") || overview;
     <title>{title} · Sheetbell docs</title>
     {description && <meta name="description" content={description} />}
     <link rel="icon" href={`${base}/favicon.ico`} type="image/x-icon" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;700&display=swap"
+    />
   </head>
   <body class="bg-gray-900 text-gray-200 font-mono min-h-screen">
     <div class="mx-auto max-w-6xl px-4 md:px-6 lg:flex lg:gap-10">
