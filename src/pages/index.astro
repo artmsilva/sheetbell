@@ -1,0 +1,27 @@
+---
+
+import "../index.css"
+import FormPage from "../components/FormPage.astro"
+import Navbar from "../components/Navbar.astro"
+import { getConfig } from "../lib/config.js"
+
+const user = Astro.locals.user;
+const { appName } = getConfig();
+
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Record a conversation</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+</head>
+<body class="text-white font-sans p-4 pt-0 pb-0 bg-gray-900">
+  <Navbar user={user} appName={appName} />
+  <FormPage />
+</body>
+</html>
+

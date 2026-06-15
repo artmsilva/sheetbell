@@ -1,0 +1,208 @@
+---
+import "../index.css";
+
+const { frontmatter } = Astro.props;
+const title = frontmatter?.title ?? "Docs";
+const description = frontmatter?.description ?? "";
+
+// Base-aware links so this works both in-app (base "/") and on GitHub Pages
+// (base "/sheetbell"). import.meta.env.BASE_URL has a trailing slash.
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const overview = `${base}/docs`;
+
+// Sidebar navigation. Order is the suggested reading order.
+const nav = [
+  { href: overview, label: "Overview" },
+  { href: `${base}/docs/getting-started`, label: "Getting started" },
+  { href: `${base}/docs/configuration`, label: "Configuration" },
+  { href: `${base}/docs/how-it-works`, label: "How it works" },
+  { href: `${base}/docs/deploy`, label: "Deploy" },
+];
+
+const current = Astro.url.pathname.replace(/\/$/, "") || overview;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} · Sheetbell docs</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="icon" href={`${base}/favicon.ico`} type="image/x-icon" />
+  </head>
+  <body class="bg-gray-900 text-gray-200 font-mono min-h-screen">
+    <div class="mx-auto max-w-6xl px-4 md:px-6 lg:flex lg:gap-10">
+      <!-- Sidebar -->
+      <aside class="lg:w-60 lg:shrink-0 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto py-6">
+        <a href={overview} class="block text-lg font-bold text-white hover:text-blue-400">
+          Sheetbell
+        </a>
+        <p class="text-xs text-gray-500 mb-6">documentation</p>
+        <nav class="space-y-1">
+          {
+            nav.map((item) => {
+              const active =
+                current === item.href ||
+                (item.href !== overview && current.startsWith(item.href));
+              return (
+                <a
+                  href={item.href}
+                  class={`block rounded px-3 py-2 text-sm transition-colors ${
+                    active
+                      ? "bg-gray-800 text-white"
+                      : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                  }`}
+                >
+                  {item.label}
+                </a>
+              );
+            })
+          }
+        </nav>
+        <a
+          href={`${base}/`}
+          class="mt-8 inline-block text-xs text-gray-500 hover:text-blue-400"
+        >
+          ← Open the form (Slack sign-in required)
+        </a>
+      </aside>
+
+      <!-- Content -->
+      <main class="min-w-0 flex-1 py-6 md:py-10">
+        <article class="prose-docs max-w-3xl">
+          <slot />
+        </article>
+        <footer class="max-w-3xl mt-16 border-t border-gray-800 pt-6 text-xs text-gray-500">
+          Sheetbell · MIT licensed
+        </footer>
+      </main>
+    </div>
+
+    <style is:global>
+      /* Lightweight prose styling for rendered markdown. Scoped to .prose-docs
+         so it never leaks into the app's own pages. */
+      .prose-docs {
+        line-height: 1.7;
+        font-size: 0.95rem;
+      }
+      .prose-docs h1 {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 0.5rem;
+      }
+      .prose-docs h2 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #fff;
+        margin-top: 2.5rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.35rem;
+        border-bottom: 1px solid #1f2937;
+      }
+      .prose-docs h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #e5e7eb;
+        margin-top: 1.75rem;
+        margin-bottom: 0.5rem;
+      }
+      .prose-docs p,
+      .prose-docs ul,
+      .prose-docs ol {
+        margin-bottom: 1rem;
+      }
+      .prose-docs ul {
+        list-style: disc;
+        padding-left: 1.5rem;
+      }
+      .prose-docs ol {
+        list-style: decimal;
+        padding-left: 1.5rem;
+      }
+      .prose-docs li {
+        margin-bottom: 0.4rem;
+      }
+      .prose-docs li > ul,
+      .prose-docs li > ol {
+        margin-top: 0.4rem;
+        margin-bottom: 0.4rem;
+      }
+      .prose-docs a {
+        color: #60a5fa;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      .prose-docs a:hover {
+        color: #93c5fd;
+      }
+      .prose-docs strong {
+        color: #fff;
+        font-weight: 700;
+      }
+      .prose-docs code {
+        background: #1f2937;
+        color: #e5e7eb;
+        padding: 0.1rem 0.35rem;
+        border-radius: 0.25rem;
+        font-size: 0.85em;
+      }
+      .prose-docs pre {
+        background: #111827;
+        border: 1px solid #1f2937;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        overflow-x: auto;
+        margin-bottom: 1.25rem;
+      }
+      .prose-docs pre code {
+        background: transparent;
+        padding: 0;
+        font-size: 0.85rem;
+        color: #e5e7eb;
+      }
+      .prose-docs blockquote {
+        border-left: 3px solid #3b82f6;
+        background: #111827;
+        padding: 0.5rem 1rem;
+        border-radius: 0 0.5rem 0.5rem 0;
+        color: #cbd5e1;
+        margin-bottom: 1.25rem;
+      }
+      .prose-docs blockquote p {
+        margin-bottom: 0;
+      }
+      .prose-docs table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1.5rem;
+        font-size: 0.85rem;
+      }
+      .prose-docs th,
+      .prose-docs td {
+        border: 1px solid #1f2937;
+        padding: 0.5rem 0.75rem;
+        text-align: left;
+        vertical-align: top;
+      }
+      .prose-docs th {
+        background: #1f2937;
+        color: #fff;
+      }
+      .prose-docs hr {
+        border: 0;
+        border-top: 1px solid #1f2937;
+        margin: 2rem 0;
+      }
+      .prose-docs .callout {
+        background: #0b2545;
+        border: 1px solid #1e3a8a;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.25rem;
+        color: #dbeafe;
+      }
+    </style>
+  </body>
+</html>
